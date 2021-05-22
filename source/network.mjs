@@ -326,7 +326,7 @@ export class Network {
                     "stay_in_q": stay_in_q,
                     "estimated pdr": (100 * (this.stats_app_num_endpoint_rx / this.stats_app_num_tx)),
                     "pdr accurate?": (pdr === (100 * (this.stats_app_num_endpoint_rx / this.stats_app_num_tx))),
-                    "if not accurate, balanced with #queued?": (pdr === (100 * (this.stats_app_num_endpoint_rx / this.stats_app_num_tx)))? 'N/A': ((this.stats_app_num_tx === (his.stats_app_num_endpoint_rx + this.stats_app_num_lost + stay_in_q))? 'BALANCED': 'NOT BALANCED'),
+                    "if not accurate, balanced with #queued?": (pdr === (100 * (this.stats_app_num_endpoint_rx / this.stats_app_num_tx)))? 'N/A': ((this.stats_app_num_tx === (this.stats_app_num_endpoint_rx + this.stats_app_num_lost + stay_in_q))? 'BALANCED': 'NOT BALANCED'),
                     "latency min": this.stats_app_latencies.min(),
                     "latency mean": this.stats_app_latencies.avg(),
                     "latency max": this.stats_app_latencies.max(),
