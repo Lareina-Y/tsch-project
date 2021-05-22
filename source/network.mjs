@@ -315,6 +315,9 @@ export class Network {
             //project ----
             "project summary": [
                 {
+                    "simulation duration": config.SIMULATION_DURATION_SEC,
+                    "mac packet size": config.MAC_MAX_PACKET_SIZE,
+                    "mac slot duration": config.MAC_SLOT_DURATION_US,
                     "pdr": pdr,
                     "loss ratio": 100 - pdr,
                     "sent": this.stats_app_num_tx,
