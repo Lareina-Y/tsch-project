@@ -549,12 +549,15 @@ export function create_link(from, to, connection)
 export function initialize()
 {
     const default_config = {
-        TX_POWER_DBM: 0, /* output power in dBm, for UDGM, LogLoss and PisterHack models */
 
-        LOGLOSS_TRANSMIT_RANGE_M: 200.0, /* in meters */
-
+        //project ----
+        //the following values can be manually configured.
+        TX_POWER_DBM: config.TX_POWER_DBM, /* output power in dBm, for UDGM, LogLoss and PisterHack models */
+        LOGLOSS_TRANSMIT_RANGE_M: config.LOGLOSS_TRANSMIT_RANGE_M, /* in meters */
         /* The maximal signal strength in dBm when the PRR is approximately 0% */
-        LOGLOSS_RX_SENSITIVITY_DBM: -100,
+        LOGLOSS_RX_SENSITIVITY_DBM: config.LOGLOSS_RX_SENSITIVITY_DBM,
+        //----
+
         /*
          * This is the inflection point of the logistic loss function, i.e. where the second-order derivative becomes negative.
          * It is also the point where 50% of packets with this signal strength are received.

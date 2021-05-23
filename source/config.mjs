@@ -288,6 +288,16 @@ const default_config = {
 
     CONFIG_FILE: config_file,
 
+    /* -------------------------------------------------------------------- */
+    /* project */
+    /* -------------------------------------------------------------------- */
+    TX_POWER_DBM: 0, /* output power in dBm, for UDGM, LogLoss and PisterHack models */
+
+    LOGLOSS_TRANSMIT_RANGE_M: 200.0, /* in meters */
+
+    /* The maximal signal strength in dBm when the PRR is approximately 0% */
+    LOGLOSS_RX_SENSITIVITY_DBM: -100,
+
     ...config_struct
 };
 

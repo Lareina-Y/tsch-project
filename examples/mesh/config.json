@@ -1,28 +1,43 @@
 {
-
     "SIMULATION_DURATION_SEC": 600,
     "APP_PACKET_SIZE": 251,
+
     "MAC_HEADER_SIZE": 2,
     "MAC_MAX_PACKET_SIZE": 251,
-    "PHY_CO_CHANNEL_REJECTION_DB":-8,
-    "MAC_SLOT_DURATION_US": 1064,
-    "TSCH_SLOT_RX_WAIT_USEC": 150,
-    "TSCH_SLOT_ACK_WAIT_USEC": 150,
-    "TSCH_BYTE_USEC": 4,
-    "PHY_OVERHEAD_BYTES": 15,
+    "MAC_SLOT_DURATION_US": 17040,
     "MAC_ACK_SIZE": 0,
     "IP_FRAGMENTATION_ENABLED": false,
+
+    "TSCH_SLOT_RX_WAIT_USEC": 150,
+    "TSCH_SLOT_ACK_WAIT_USEC": 150,
+    "TSCH_BYTE_USEC": 64,
+    "PHY_OVERHEAD_BYTES": 15.25,
+    "PHY_CO_CHANNEL_REJECTION_DB":-8,
+
     "SCHEDULING_ALGORITHM": "Orchestra",
 
     "POSITIONING_LAYOUT": "Mesh",
+    "POSITIONING_LINK_QUALITY": 1,
+    "POSITIONING_NUM_DEGREES": 2,
+
     "NODE_TYPES": [
         {
             "NAME": "node",
             "START_ID": 1,
             "COUNT": 3,
-            "CONNECTIONS" : [{"NODE_TYPE": "node", "LINK_MODEL" : "Fixed"}],
-            "APP_PACKETS": {"APP_PACKET_PERIOD_SEC":   0.2, "APP_WARMUP_PERIOD_SEC": 1, "TO_ID":  1}
+            "CONNECTIONS" : [{"NODE_TYPE": "node", "LINK_MODEL" : "LogisticLoss"}],
+            "APP_PACKETS": {"APP_PACKET_PERIOD_SEC": 10, "TO_ID":  1}
         }
+    ],
+
+    "TX_POWER_DBM": 10,
+    "LOGLOSS_TRANSMIT_RANGE_M": 530,
+    "LOGLOSS_RX_SENSITIVITY_DBM": -102,
+    "POSITIONS": [
+        {"ID": 1, "X": 0, "Y": 0},
+        {"ID": 2, "X": 0, "Y": 509},
+        {"ID": 3, "X": 350, "Y": 0}
     ]
+
 
 }
