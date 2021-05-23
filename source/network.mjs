@@ -316,8 +316,11 @@ export class Network {
             "project summary": [
                 {
                     "simulation duration": config.SIMULATION_DURATION_SEC,
+                    "app packet period": config.NODE_TYPES[0].APP_PACKETS.APP_PACKET_PERIOD_SEC,
                     "mac packet size": config.MAC_MAX_PACKET_SIZE,
                     "mac slot duration": config.MAC_SLOT_DURATION_US,
+                    "transmit range": config.LOGLOSS_TRANSMIT_RANGE_M,
+                    "fragmentation": config.IP_FRAGMENTATION_ENABLED,
                     "pdr": pdr,
                     "loss ratio": 100 - pdr,
                     "sent": this.stats_app_num_tx,

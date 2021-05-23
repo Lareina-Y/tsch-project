@@ -179,8 +179,14 @@ const default_config = {
      * Not relevant for EB packets - header overhead is already a part of the MAC_EB_PACKET_SIZE parameter.
      */
     MAC_HEADER_SIZE: 20,
+
+    //project ----
+    //to ensure no fragmentation, project disables this option
     /* Enable fragmentation? If not enabled, packets larger than max MAC packet size are simply dropped */
-    IP_FRAGMENTATION_ENABLED: true,
+    IP_FRAGMENTATION_ENABLED: false,
+    //----
+
+
     /* IP packet reassembly maximal time */
     IP_REASSEMBLY_TIMEOUT_SEC: 8,
 
