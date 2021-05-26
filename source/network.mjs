@@ -315,6 +315,7 @@ export class Network {
             //project ----
             "project summary": [
                 {
+                    "scheduling": config.SCHEDULING_ALGORITHM,
                     "simulation duration": config.SIMULATION_DURATION_SEC,
                     "app packet period": config.NODE_TYPES[0].APP_PACKETS.APP_PACKET_PERIOD_SEC,
                     "mac packet size": config.MAC_MAX_PACKET_SIZE,
