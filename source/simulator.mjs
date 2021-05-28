@@ -153,6 +153,7 @@ function parse_position(network, position)
                 node.pos_y = 0;
             }
         }
+        log.log(log.INFO, node, "Main", `X=${node.pos_x}, Y=${node.pos_y}`);
     } else {
         log.log(log.WARNING, null, "Main", `Position specified for unknown node ID=${node_id}`);
     }
@@ -369,19 +370,48 @@ export function construct_simulation(is_from_web)
                     }
                 }
             } else {
-                const to_node_id = "TO_ID" in data ? data["TO_ID"] : constants.ROOT_NODE_ID;
-                if (to_node_id === -1 || is_valid_node_id(net, to_node_id)) {
-                    for (let from_node_id of type_ids[from_node_type.NAME]) {
-                        /* generate packets only if the source is distinct from the destination */
+
+                //original code ----
+                // const to_node_id = "TO_ID" in data ? data["TO_ID"] : constants.ROOT_NODE_ID;
+                // if (to_node_id === -1 || is_valid_node_id(net, to_node_id)) {
+                //     for (let from_node_id of type_ids[from_node_type.NAME]) {
+                //         /* generate packets only if the source is distinct from the destination */
+                //         if (from_node_id !== to_node_id) {
+                //             new ps.PacketSource(net.get_node(from_node_id),
+                //                                 to_node_id === -1 ? null : net.get_node(to_node_id),
+                //                                 period_sec, false, is_query, size);
+                //         }
+                //     }
+                // } else {
+                //     log.log(log.WARNING, null, "Main", `application packet specification: invalid to node ID "${to_node_id}"`);
+                // }
+                //----
+
+                //project ----
+                const numParticipants = Math.floor(net.nodes.size * 0.4);
+                const idSendUpperBound = numParticipants;
+                const idReceiveLowerBound = (net.nodes.size - numParticipants);
+
+                log.log(log.INFO, null, "Main", `Only 40% nodes (=${numParticipants}) of the total nodes (= ${net.nodes.size}) will send/receive packets.`);
+                log.log(log.INFO, null, "Main", `Sender IDs: between 1 and ${idSendUpperBound}.`);
+                log.log(log.INFO, null, "Main", `Receiver IDs: between ${idReceiveLowerBound} and ${net.nodes.size}.`);
+
+                for (let from_node_id = 1; from_node_id <= idSendUpperBound; from_node_id++) {
+                    let to_node_id = Math.floor(Math.random() * (net.nodes.size + 1 - idReceiveLowerBound) + idReceiveLowerBound);
+
+                    if (is_valid_node_id(net, to_node_id)) {
                         if (from_node_id !== to_node_id) {
+                            log.log(log.INFO, null, "Main", `scheduling to send a packet from "${from_node_id}" to "${to_node_id}"`);
                             new ps.PacketSource(net.get_node(from_node_id),
-                                                to_node_id === -1 ? null : net.get_node(to_node_id),
+                                                net.get_node(to_node_id),
                                                 period_sec, false, is_query, size);
                         }
+                    } else {
+                        log.log(log.WARNING, null, "Main", `application packet specification: invalid to node ID "${to_node_id}"`);
                     }
-                } else {
-                    log.log(log.WARNING, null, "Main", `application packet specification: invalid to node ID "${to_node_id}"`);
                 }
+                //----
+
             }
         }
     }
