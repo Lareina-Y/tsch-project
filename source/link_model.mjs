@@ -568,9 +568,9 @@ export function initialize()
         LOGLOSS_PATH_LOSS_EXPONENT: 3.0,
 
         /* For the Unit Disk Graph Model */
-        UDGM_TRANSMIT_RANGE_M: 50.0, /* in meters */
-        UDGM_RX_SUCCESS: 1.0,
-        UDGM_CONSTANT_LOSS: false, /* dependent on distance? */
+        UDGM_TRANSMIT_RANGE_M: config.UDGM_TRANSMIT_RANGE_M, /* in meters */
+        UDGM_RX_SUCCESS: config.UDGM_RX_SUCCESS,
+        UDGM_CONSTANT_LOSS: config.UDGM_CONSTANT_LOSS, /* dependent on distance? */
 
         /* The standard deviation of the AWGN distribution */
         AWGN_GAUSSIAN_STD: 3.0,
