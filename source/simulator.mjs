@@ -159,6 +159,15 @@ function parse_position(network, position)
     }
 }
 
+function get_random_nodeId(numNodes, lowerBound, excludeId)
+{
+    let from_node_id = excludeId;
+    while(from_node_id === excludeId) {
+        from_node_id = Math.floor(Math.random() * (numNodes + 1 - lowerBound) + lowerBound);
+    }
+    return from_node_id;
+}
+
 /* ------------------------------------- */
 
 export function construct_simulation(is_from_web)
@@ -388,26 +397,23 @@ export function construct_simulation(is_from_web)
                 //----
 
                 //project ----
-                const numParticipants = Math.floor(net.nodes.size * 0.4);
-                const idSendUpperBound = numParticipants;
-                const idReceiveLowerBound = (net.nodes.size - numParticipants);
+                const numSends = 10, lowerBound = 1;
+                const sink_node_id = Math.floor(config.NODE_TYPES[0].COUNT / 2 ) + 1;
 
-                log.log(log.INFO, null, "Main", `Only 40% nodes (=${numParticipants}) of the total nodes (= ${net.nodes.size}) will send/receive packets.`);
-                log.log(log.INFO, null, "Main", `Sender IDs: between 1 and ${idSendUpperBound}.`);
-                log.log(log.INFO, null, "Main", `Receiver IDs: between ${idReceiveLowerBound} and ${net.nodes.size}.`);
+                log.log(log.INFO, null, "Main", `Only ${numSends} nodes will send packets.`);
 
-                for (let from_node_id = 1; from_node_id <= idSendUpperBound; from_node_id++) {
-                    let to_node_id = Math.floor(Math.random() * (net.nodes.size + 1 - idReceiveLowerBound) + idReceiveLowerBound);
+                for (let i = 1; i <= numSends; i++) {
+                    let from_node_id = get_random_nodeId(net.nodes.size, lowerBound, sink_node_id);
 
-                    if (is_valid_node_id(net, to_node_id)) {
-                        if (from_node_id !== to_node_id) {
-                            log.log(log.INFO, null, "Main", `scheduling to send a packet from "${from_node_id}" to "${to_node_id}"`);
+                    if (is_valid_node_id(net, from_node_id)) {
+                        if (from_node_id !== sink_node_id) {
+                            log.log(log.INFO, null, "Main", `scheduling to send a packet from "${from_node_id}" to "${sink_node_id}"`);
                             new ps.PacketSource(net.get_node(from_node_id),
-                                                net.get_node(to_node_id),
+                                                net.get_node(sink_node_id),
                                                 period_sec, false, is_query, size);
                         }
                     } else {
-                        log.log(log.WARNING, null, "Main", `application packet specification: invalid to node ID "${to_node_id}"`);
+                        log.log(log.WARNING, null, "Main", `application packet specification: invalid to node ID "${from_node_id}"`);
                     }
                 }
                 //----
