@@ -253,6 +253,30 @@ function generate_grid(num_nodes)
     return nodes;
 }
 
+// project ----
+function generate_dal_grid(num_nodes)
+{
+    log.log(log.INFO, null, "Main", `DAL GRID STEP #1`);
+    log.log(log.INFO, null, "Main", `DalGrid ---------------`);
+    const nodes = [];
+    let n = Math.sqrt(num_nodes);
+    const DISTANCE = parseFloat(config.DAL_NODE_DISTANCE);
+    let idx = 1, xVal = 0, yVal = 0;
+    for(let i=0; i<n; i++){
+        for(let j=0; j<n; j++){
+            const y = yVal*(-1);
+            log.log(log.INFO, null, "Main", `node id ${idx}: x ${xVal}, y ${y}`);
+            nodes.push({pos_x: xVal, pos_y: y});
+            xVal = ((xVal+DISTANCE) % (n * DISTANCE));
+            idx++;
+        }
+        yVal = ((yVal+DISTANCE) % (n * DISTANCE));
+    }
+    log.log(log.INFO, null, "Main", `DalGrid ---------------`);
+    return nodes;
+}
+//----
+
 export default function generate_network(num_nodes)
 {
     let result;
@@ -263,6 +287,8 @@ export default function generate_network(num_nodes)
         result = generate_line(num_nodes);
     } else if (config.POSITIONING_LAYOUT === "Grid") {
         result = generate_grid(num_nodes);
+    } else if (config.POSITIONING_LAYOUT === "DalGrid") {  //project
+        result = generate_dal_grid(num_nodes);
     } else if (config.POSITIONING_LAYOUT === "Mesh") {
         let num_degrees = config.POSITIONING_NUM_DEGREES;
         if (!num_degrees) {

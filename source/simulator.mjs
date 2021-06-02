@@ -113,6 +113,10 @@ function check_node_validity(node)
     if (node.links.size === 0 && !config.TRACE_FILE) {
         log.log(log.WARNING, null, "Main", `node ${node.id} of type "${node.config.NAME}" has no valid connections`);
     }
+    log.log(log.INFO, null, "Main", `>> node ${node.id} => links count: [${node.links.size}]`);
+    for (let [id, link] of node.links) {
+        log.log(log.INFO, null, "Main", `node ${node.id} has a link from ${link.from.id} to "${link.to.id}"`);
+    }
 }
 
 function check_node_type_validity(node_type)
@@ -341,6 +345,12 @@ export function construct_simulation(is_from_web)
             }
             /* Connections defined for the node type */
             for (const connection of from_node_type.CONNECTIONS) {
+
+                //project
+                if(config.POSITIONING_LAYOUT === "DalGrid") {
+                    break;
+                }
+
                 const TO_NODE_TYPE = ("NODE_TYPE" in connection) ? connection["NODE_TYPE"] : connection["TO_NODE_TYPE"];
                 if (!(TO_NODE_TYPE in type_ids)) {
                     log.log(log.WARNING, null, "Main", `Ignoring connections with unknown node type "${TO_NODE_TYPE}"`);
@@ -427,6 +437,12 @@ export function construct_simulation(is_from_web)
         connections_set_manually = true;
 
         for (const connection of config.CONNECTIONS) {
+
+            //project
+            if(config.POSITIONING_LAYOUT === "DalGrid") {
+                break;
+            }
+
             const to_node_id = connection["FROM_ID"];
             const from_node_id = connection["TO_ID"];
             const node_type = connection["NODE_TYPE"];
@@ -486,6 +502,41 @@ export function construct_simulation(is_from_web)
         }
     }
 
+    //project ----
+    if(config.POSITIONING_LAYOUT === "DalGrid") { //DalGrid's connections
+        log.log(log.INFO, null, "Main", `DAL GRID STEP #2`);
+        connections_set_manually = true; //prevent an automatic redundant setup at the bottom
+        const n = Math.sqrt(config.NODE_TYPES[0].COUNT);
+        const DISTANCE = parseFloat(config.DAL_NODE_DISTANCE);
+
+        for (let [id, node] of net.nodes) {
+            log.log(log.INFO, null, "Main", `>> current node: "${id}"`);
+            //right
+            if (node.pos_x != ((n - 1) * DISTANCE)) {
+                const link1 = link_model.create_link(
+                    net.get_node(id), net.get_node(id + 1), config.CONNECTIONS[0]);
+                net.add_link(link1);
+                const link2 = link_model.create_link(
+                    net.get_node(id + 1), net.get_node(id), config.CONNECTIONS[0]);
+                net.add_link(link2);
+                log.log(log.INFO, null, "Main", `added a link: from ${id} to ${id + 1}`);
+                log.log(log.INFO, null, "Main", `added a link: from ${id + 1} to ${id}`);
+            }
+            //down
+            if (node.pos_y != ((-1) * (n - 1) * DISTANCE)) {
+                const link1 = link_model.create_link(
+                    net.get_node(id), net.get_node(id + n), config.CONNECTIONS[0]);
+                net.add_link(link1);
+                const link2 = link_model.create_link(
+                    net.get_node(id + n), net.get_node(id), config.CONNECTIONS[0]);
+                net.add_link(link2);
+                log.log(log.INFO, null, "Main", `added a link: from ${id} to ${id + n}`);
+                log.log(log.INFO, null, "Main", `added a link: from ${id + n} to ${id}`);
+            }
+        }
+    }
+    //----
+
     if (connections_set_manually) {
         for (let type in type_ids) {
             if (!types_with_connections_out[type]
@@ -513,6 +564,7 @@ export function construct_simulation(is_from_web)
     }
 
     /* check the validity of the configurations */
+    log.log(log.INFO, null, "Main", `connections ---------------`);
     for (let [_, node] of net.nodes) {
         check_node_validity(node);
     }
