@@ -110,6 +110,7 @@ export class PacketSource {
 
     /* this function is called at the start of a new packet period */
     next_packet_period() {
+        log.log(log.INFO, null, "Main", `>> packet period timer: source: node # ${this.source.id} -> dest: node # ${this.destination_id}`);
         this.timer_time = rng.random() * this.period;
         time.add_timer(this.timer_time, false, this, function(ps) {
             ps.generate();
