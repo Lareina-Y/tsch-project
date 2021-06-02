@@ -163,16 +163,41 @@ function parse_position(network, position)
     }
 }
 
-function get_random_nodeId(numNodes, lowerBound, excludeId)
-{
-    let from_node_id = excludeId;
-    while(from_node_id === excludeId) {
-        from_node_id = Math.floor(Math.random() * (numNodes + 1 - lowerBound) + lowerBound);
-    }
-    return from_node_id;
-}
-
 /* ------------------------------------- */
+
+//project ----
+function get_random(numNodes, lowerBound, excludeId)
+{
+    let id_chosen = excludeId;
+    while (id_chosen === excludeId) {
+        id_chosen = Math.floor(Math.random() * (numNodes + 1 - lowerBound) + lowerBound);
+    }
+    return id_chosen;
+}
+//----
+
+//project ----
+function get_unique_random(numNodes, lowerBound, excludeId, existingArr)
+{
+    var chosen = get_random(numNodes, lowerBound, excludeId);
+    while (existingArr.includes(chosen)) {
+        chosen = get_random(numNodes, lowerBound, excludeId);
+    }
+    return chosen;
+}
+//----
+
+//project ----
+function get_n_random(numNodes, lowerBound, excludeId, howMany) {
+    let results = [];
+    for (let i=1; i<=howMany; i++) {
+        let chosen = get_unique_random(numNodes, lowerBound, excludeId, results);
+        log.log(log.WARNING, null, "Main", `random source # ${i} - chosen node #${chosen}`);
+        results.push(chosen);
+    }
+    return results;
+}
+//----
 
 export function construct_simulation(is_from_web)
 {
@@ -412,8 +437,10 @@ export function construct_simulation(is_from_web)
 
                 log.log(log.INFO, null, "Main", `Only ${numSends} nodes will send packets.`);
 
-                for (let i = 1; i <= numSends; i++) {
-                    let from_node_id = get_random_nodeId(net.nodes.size, lowerBound, sink_node_id);
+                let from_node_ids = get_n_random(net.nodes.size, lowerBound, sink_node_id, numSends);
+                log.log(log.INFO, null, "Main", `chosen random sources: ${from_node_ids}.`);
+
+                for(let from_node_id of from_node_ids){
 
                     if (is_valid_node_id(net, from_node_id)) {
                         if (from_node_id !== sink_node_id) {
