@@ -371,11 +371,6 @@ export function construct_simulation(is_from_web)
             /* Connections defined for the node type */
             for (const connection of from_node_type.CONNECTIONS) {
 
-                //project
-                if(config.POSITIONING_LAYOUT === "DalGrid") {
-                    break;
-                }
-
                 const TO_NODE_TYPE = ("NODE_TYPE" in connection) ? connection["NODE_TYPE"] : connection["TO_NODE_TYPE"];
                 if (!(TO_NODE_TYPE in type_ids)) {
                     log.log(log.WARNING, null, "Main", `Ignoring connections with unknown node type "${TO_NODE_TYPE}"`);
@@ -431,26 +426,101 @@ export function construct_simulation(is_from_web)
                 // }
                 //----
 
-                //project ----
+                //project ---- #1: 40% end-to-end pairs
+                // //Dr Haque Model
+                // const numParticipants = Math.floor(net.nodes.size * 0.4);
+                // const idSendUpperBound = numParticipants;
+                // const idReceiveLowerBound = (net.nodes.size - numParticipants);
+                //
+                // log.log(log.INFO, null, "Main", `Only 40% nodes (=${numParticipants}) of the total nodes (= ${net.nodes.size}) will send/receive packets.`);
+                // log.log(log.INFO, null, "Main", `Sender IDs: between 1 and ${idSendUpperBound}.`);
+                // log.log(log.INFO, null, "Main", `Receiver IDs: between ${idReceiveLowerBound} and ${net.nodes.size}.`);
+                //
+                // for (let from_node_id = 1; from_node_id <= idSendUpperBound; from_node_id++) {
+                //     let to_node_id = Math.floor(Math.random() * (net.nodes.size + 1 - idReceiveLowerBound) + idReceiveLowerBound);
+                //
+                //     if (is_valid_node_id(net, to_node_id)) {
+                //         if (from_node_id !== to_node_id) {
+                //             log.log(log.INFO, null, "Main", `scheduling to send a packet from "${from_node_id}" to "${to_node_id}"`);
+                //             new ps.PacketSource(net.get_node(from_node_id),
+                //                 net.get_node(to_node_id),
+                //                 period_sec, false, is_query, size);
+                //         }
+                //     } else {
+                //         log.log(log.WARNING, null, "Main", `application packet specification: invalid to node ID "${to_node_id}"`);
+                //     }
+                // }
+                //----
+
+                //project ---- #2: random 10 nodes send to 1 sink in the center.
+                // //Dr. Baddely Model
+                // const numSends = 10, lowerBound = 1;
+                // const sink_node_id = Math.floor(config.NODE_TYPES[0].COUNT / 2 ) + 1;
+                //
+                // log.log(log.INFO, null, "Main", `Only ${numSends} nodes will send packets.`);
+                //
+                // let from_node_ids = get_n_random(net.nodes.size, lowerBound, sink_node_id, numSends);
+                // log.log(log.INFO, null, "Main", `chosen random sources: ${from_node_ids}.`);
+                //
+                // for(let from_node_id of from_node_ids){
+                //
+                //     if (is_valid_node_id(net, from_node_id)) {
+                //         if (from_node_id !== sink_node_id) {
+                //             log.log(log.INFO, null, "Main", `scheduling to send a packet from "${from_node_id}" to "${sink_node_id}"`);
+                //             new ps.PacketSource(net.get_node(from_node_id),
+                //                                 net.get_node(sink_node_id),
+                //                                 period_sec, false, is_query, size);
+                //         }
+                //     } else {
+                //         log.log(log.WARNING, null, "Main", `application packet specification: invalid to node ID "${from_node_id}"`);
+                //     }
+                // }
+                //----
+
+                // //project ---- #3-1: the first 10 nodes send to 1 sink at the last row.
+                // //Dr Haque Model + Dr Baddely Model
+                // let n = Math.sqrt(config.NODE_TYPES[0].COUNT);
+                // let to_node_id = (n * (n-1)) + (Math.floor(n/2)+1);
+                // let num_first_senders = 10;
+                // log.log(log.INFO, null, "Main", `Only the first 10 nodes will send/receive packets to the center of the last row (= sink, # ${to_node_id}).`);
+                //
+                // for (let from_node_id = 1; from_node_id <= num_first_senders; from_node_id++) {
+                //     if (is_valid_node_id(net, to_node_id)) {
+                //         if (from_node_id !== to_node_id) {
+                //             log.log(log.INFO, null, "Main", `schedule to send a packet from "${from_node_id}" to "${to_node_id}"`);
+                //             new ps.PacketSource(net.get_node(from_node_id),
+                //                 net.get_node(to_node_id),
+                //                 period_sec, false, is_query, size);
+                //         }
+                //     } else {
+                //         log.log(log.WARNING, null, "Main", `application packet specification: invalid to node ID "${to_node_id}"`);
+                //     }
+                // }
+                // //----
+
+                //project ---- #3-2: the 10 'random' nodes (among the first 15 nodes) send to 1 sink at the last row.
+                //Dr Haque Model + Dr Baddely Model
                 const numSends = 10, lowerBound = 1;
-                const sink_node_id = Math.floor(config.NODE_TYPES[0].COUNT / 2 ) + 1;
+                const n = Math.sqrt(config.NODE_TYPES[0].COUNT);
+                const sink_node_id = (n * (n-1)) + (Math.floor(n/2)+1);
+                const idSendUpperBound = 15;
 
-                log.log(log.INFO, null, "Main", `Only ${numSends} nodes will send packets.`);
+                log.log(log.INFO, null, "Main", `Only 10 random nodes (among the first 15) of the total nodes (= ${net.nodes.size}) will send packets to sink node # ${sink_node_id}.`);
+                log.log(log.INFO, null, "Main", `Sender IDs: between 1 and ${idSendUpperBound}.`);
 
-                let from_node_ids = get_n_random(net.nodes.size, lowerBound, sink_node_id, numSends);
+                let from_node_ids = get_n_random(idSendUpperBound, lowerBound, sink_node_id, numSends);
                 log.log(log.INFO, null, "Main", `chosen random sources: ${from_node_ids}.`);
 
                 for(let from_node_id of from_node_ids){
-
-                    if (is_valid_node_id(net, from_node_id)) {
+                    if (is_valid_node_id(net, from_node_id) && is_valid_node_id(net, sink_node_id)) {
                         if (from_node_id !== sink_node_id) {
-                            log.log(log.INFO, null, "Main", `scheduling to send a packet from "${from_node_id}" to "${sink_node_id}"`);
+                            log.log(log.INFO, null, "Main", `schedule to send a packet from "${from_node_id}" to "${sink_node_id}"`);
                             new ps.PacketSource(net.get_node(from_node_id),
-                                                net.get_node(sink_node_id),
-                                                period_sec, false, is_query, size);
+                                net.get_node(sink_node_id),
+                                period_sec, false, is_query, size);
                         }
                     } else {
-                        log.log(log.WARNING, null, "Main", `application packet specification: invalid to node ID "${from_node_id}"`);
+                        log.log(log.WARNING, null, "Main", `application packet specification: invalid to node IDs `);
                     }
                 }
                 //----
@@ -464,11 +534,6 @@ export function construct_simulation(is_from_web)
         connections_set_manually = true;
 
         for (const connection of config.CONNECTIONS) {
-
-            //project
-            if(config.POSITIONING_LAYOUT === "DalGrid") {
-                break;
-            }
 
             const to_node_id = connection["FROM_ID"];
             const from_node_id = connection["TO_ID"];
@@ -530,9 +595,9 @@ export function construct_simulation(is_from_web)
     }
 
     //project ----
-    if(config.POSITIONING_LAYOUT === "DalGrid") { //DalGrid's connections
-        log.log(log.INFO, null, "Main", `DAL GRID STEP #2`);
-        connections_set_manually = true; //prevent an automatic redundant setup at the bottom
+    if(config.POSITIONING_LAYOUT === "DalGrid") {
+        log.log(log.INFO, null, "Main", `>> DalGrid ----`);
+        connections_set_manually = true;
         const n = Math.sqrt(config.NODE_TYPES[0].COUNT);
         const DISTANCE = parseFloat(config.DAL_NODE_DISTANCE);
 
@@ -561,6 +626,9 @@ export function construct_simulation(is_from_web)
                 log.log(log.INFO, null, "Main", `added a link: from ${id + n} to ${id}`);
             }
         }
+    }else if (config.POSITIONING_LAYOUT === "DalPhy"){
+        log.log(log.INFO, null, "Main", `>> DalPhy ----`);
+        connections_set_manually = false;
     }
     //----
 
@@ -579,7 +647,8 @@ export function construct_simulation(is_from_web)
         }
     } else if (!config.TRACE_FILE) {
         /* No trace file and no manual connections; set up connections */
-        const connection = { LINK_MODEL: "LogisticLoss" };
+        let connection = (config.POSITIONING_LAYOUT === "DalPhy")? {LINK_MODEL: "UDGM"}:{LINK_MODEL: "LogisticLoss"};
+        log.log(log.INFO, null, "Main", `link model: "${connection.LINK_MODEL}"`);
         for (let i = 1; i <= net.nodes.size; ++i) {
             for (let j = i + 1; j <= net.nodes.size; ++j) {
                 const n1 = net.get_node(i);
@@ -591,7 +660,7 @@ export function construct_simulation(is_from_web)
     }
 
     /* check the validity of the configurations */
-    log.log(log.INFO, null, "Main", `connections ---------------`);
+    log.log(log.INFO, null, "Main", `>> connections ---------------`);
     for (let [_, node] of net.nodes) {
         check_node_validity(node);
     }

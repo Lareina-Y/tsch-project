@@ -254,10 +254,9 @@ function generate_grid(num_nodes)
 }
 
 // project ----
-function generate_dal_grid(num_nodes)
+function generate_dalgridphy(num_nodes)
 {
-    log.log(log.INFO, null, "Main", `DAL GRID STEP #1`);
-    log.log(log.INFO, null, "Main", `DalGrid ---------------`);
+    log.log(log.INFO, null, "Main", `>> dal topology ---------------`);
     const nodes = [];
     let n = Math.sqrt(num_nodes);
     const DISTANCE = parseFloat(config.DAL_NODE_DISTANCE);
@@ -272,7 +271,7 @@ function generate_dal_grid(num_nodes)
         }
         yVal = ((yVal+DISTANCE) % (n * DISTANCE));
     }
-    log.log(log.INFO, null, "Main", `DalGrid ---------------`);
+    log.log(log.INFO, null, "Main", `---------------`);
     return nodes;
 }
 //----
@@ -287,8 +286,8 @@ export default function generate_network(num_nodes)
         result = generate_line(num_nodes);
     } else if (config.POSITIONING_LAYOUT === "Grid") {
         result = generate_grid(num_nodes);
-    } else if (config.POSITIONING_LAYOUT === "DalGrid") {  //project
-        result = generate_dal_grid(num_nodes);
+    } else if (config.POSITIONING_LAYOUT === "DalGrid" || config.POSITIONING_LAYOUT === "DalPhy") {  //project
+        result = generate_dalgridphy(num_nodes);
     } else if (config.POSITIONING_LAYOUT === "Mesh") {
         let num_degrees = config.POSITIONING_NUM_DEGREES;
         if (!num_degrees) {
