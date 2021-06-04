@@ -178,6 +178,7 @@ export class Network {
         let cycle_idle = 0;
         let org_rx = 0;
         let stay_in_q = 0;
+        let links_count = 0;
         //----
 
         for (let [id, node] of this.nodes) {
@@ -250,6 +251,7 @@ export class Network {
             cycle_idle += node_stats.proj_idling;
             org_rx += node_stats.org_rx;
             stay_in_q += node_stats.stay_in_q;
+            links_count += node_stats.stats_links_count;
             //----
 
         }
@@ -351,14 +353,15 @@ export class Network {
                     "slot cycle rx total (rx + scan + idle)": (cycle_rx + cycle_scanning + cycle_idle),
                     "is rx total match with original?": (org_rx === (cycle_rx + cycle_scanning + cycle_idle)),
                     "energy_uc": charge_uc,
-                    "energy_except_scanning_uc": charge_joined_uc
+                    "energy_except_scanning_uc": charge_joined_uc,
+                    "links_count": links_count
                 }
             ]
             //----
         };
 
         log.log(log.INFO, null, "Main", `packet stats: PDR=${pdr.toFixed(2)}% generated=${this.stats_app_num_tx} received=${this.stats_app_num_endpoint_rx} lost=${this.stats_app_num_lost} (tx_limit/queue/routing/scheduling/other=${this.stats_app_num_tx_limit_drops}/${this.stats_app_num_queue_drops}/${this.stats_app_num_routing_drops}/${this.stats_app_num_scheduling_drops}/${this.stats_app_num_other_drops})`);
-        log.log(log.INFO, null, "Main", `link stats: PAR=${ll_par.toFixed(2)}% tx=${this.stats_mac_parent_tx_unicast} acked=${this.stats_mac_parent_acked}`);
+        log.log(log.INFO, null, "Main", `link stats: Links#=${links_count} PAR=${ll_par.toFixed(2)}% tx=${this.stats_mac_parent_tx_unicast} acked=${this.stats_mac_parent_acked}`);
 
         /* stats can come from multiple runs, they are merged at the end; use "0" as the run ID for now */
         stats = {"0" : stats};

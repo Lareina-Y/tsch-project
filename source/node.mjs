@@ -1694,6 +1694,7 @@ export class Node {
                 neighbor.queue_counted = true;
             }
         }
+        const stats_links_count = this.links.size;
         //----
 
         return {
@@ -1751,6 +1752,7 @@ export class Node {
             proj_idling: proj_idling,
             org_rx: org_rx,
             stay_in_q: stay_in_q,
+            stats_links_count: stats_links_count,
             //----
 
             radio_duty_cycle: pretty_radio_duty_cycle,
