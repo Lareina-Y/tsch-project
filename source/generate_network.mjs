@@ -38,7 +38,9 @@
 import config from './config.mjs';
 import * as log from './log.mjs';
 import { get_node_distance } from './utils.mjs';
+import { get_distance } from './utils.mjs';
 import { rng } from './random.mjs';
+import * as link_model from './link_model.mjs';
 
 function get_rssi(n1, n2)
 {
@@ -94,6 +96,7 @@ function initialize_random(num_nodes, area_radius)
         const angle = rng.random() * Math.PI * 2;
         const pos_x = distance * Math.sin(angle);
         const pos_y = distance * Math.cos(angle);
+        log.log(log.INFO, null, "Main", `verify: area_radius=${area_radius} distance=${distance} pos_x=${pos_x} pos_y=${pos_y}`);
         nodes.push({pos_x, pos_y, distance, angle});
     }
     return nodes;
@@ -256,7 +259,7 @@ function generate_grid(num_nodes)
 // project ----
 function generate_dalgridphy(num_nodes)
 {
-    log.log(log.INFO, null, "Main", `>> dal topology ---------------`);
+    log.log(log.INFO, null, "Main", `>> dal grid topology ---------------`);
     const nodes = [];
     let n = Math.sqrt(num_nodes);
     const DISTANCE = parseFloat(config.DAL_NODE_DISTANCE);
@@ -274,7 +277,70 @@ function generate_dalgridphy(num_nodes)
     log.log(log.INFO, null, "Main", `---------------`);
     return nodes;
 }
-//----
+
+// project ----
+function get_UDGM_degrees_links(nodes)
+{
+    const links = {};
+    let num_good_links = 0;
+    for (let i = 0; i < nodes.length; ++i) {
+        const n1 = nodes[i];
+        for (let j = i + 1; j < nodes.length; ++j) {
+            const n2 = nodes[j];
+            let connection = {LINK_MODEL: "UDGM"};
+            const alink = link_model.create_link(n1, n2, connection); //project
+            if (alink.get_average_success_rate() >= parseFloat(config.UDGM_RX_SUCCESS)) {
+                const key = i * nodes.length + j;
+                links[key] = alink;
+                num_good_links++;
+            }
+        }
+    }
+    const degrees = 2 * num_good_links / nodes.length;
+    log.log(log.INFO, null, "Main", `>> num_good_links ${num_good_links}`);
+    return { degrees, links };
+}
+
+function generate_dalmeshphy(num_nodes) {
+    log.log(log.INFO, null, "Main", `>> random mesh topology ---------------`);
+
+    let distance = config.DAL_NODE_DISTANCE;
+    let square_width = (Math.sqrt(config.NODE_TYPES[0].COUNT) - 1) * (distance);
+
+    //2. option 1
+    // (The circle of which area is exactly the same as the area of the grid mesh square of the same number of nodes and the same number of distance.)
+    // This option produces about 45~50% more number of radio links than the option 2 (e.g., at HOME, numOfNodes=576).
+    //let radius = Math.sqrt(Math.pow(square_width, 2) / Math.PI);
+
+    //1. option 2
+    // (The circle of which size is such that the 4 corners of the grid mesh square of the same number of nodes and the same number of distance
+    // touches the circle.)
+    // This option produces about 20~30% more  number of radio links than the corresponding case of the grid mesh square (e.g., at HOME, numOfNodes=576).
+    //let radius = get_distance(0, 0, Math.floor(square_width / 2), Math.floor(square_width / 2));
+
+    //3. option 3
+    // (The circle of which radius is x times of option 1 where the resulting number of links is similar to the corresponding case of the grid mesh square.)
+    //let radius = Math.sqrt(Math.pow(square_width, 2) / Math.PI) * (1.35); //1.35 FOR OUTDOOR
+    let radius = Math.sqrt(Math.pow(square_width, 2) / Math.PI) * (1.475); //1.475 FOR HOME
+
+    //log.log(log.WARNING, null, "Main", `verify: distance ${distance} square_width ${square_width} radius ${radius}`);
+
+    const nodes = initialize_random(num_nodes, (radius));
+    const min_acceptable_degrees = 10;
+
+    let net = get_UDGM_degrees_links(nodes);
+    while (net.degrees < min_acceptable_degrees) {
+        radius = increase_degree(nodes, radius);
+        log.log(log.INFO, null, "Main", `>> increase degree`);
+        net = get_UDGM_degrees_links(nodes);
+    }
+
+    //log.log(log.INFO, null, "Main", `>> avg degrees ${net.degrees}`);
+
+    return nodes;
+}
+
+//---- project
 
 export default function generate_network(num_nodes)
 {
@@ -286,8 +352,10 @@ export default function generate_network(num_nodes)
         result = generate_line(num_nodes);
     } else if (config.POSITIONING_LAYOUT === "Grid") {
         result = generate_grid(num_nodes);
-    } else if (config.POSITIONING_LAYOUT === "DalGrid" || config.POSITIONING_LAYOUT === "DalPhy") {  //project
+    } else if (config.POSITIONING_LAYOUT === "DalGrid" || config.POSITIONING_LAYOUT === "DalPhyGridMesh") {  //project
         result = generate_dalgridphy(num_nodes);
+    } else if (config.POSITIONING_LAYOUT === "DalPhyRandomMesh") {  //project
+        result = generate_dalmeshphy(num_nodes);
     } else if (config.POSITIONING_LAYOUT === "Mesh") {
         let num_degrees = config.POSITIONING_NUM_DEGREES;
         if (!num_degrees) {

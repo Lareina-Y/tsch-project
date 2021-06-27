@@ -74,7 +74,7 @@ export class Link {
 
     /* Additive white Gaussian noise */
     getAWGN() {
-        return rng.next_gaussian() * this.from.config.AWGN_GAUSSIAN_STD;
+        return rng.next_gaussian() * config.AWGN_GAUSSIAN_STD;
     }
 
     /*
@@ -110,7 +110,7 @@ export class LogisticLossLink extends Link {
     }
 
     update() {
-        this.is_active = (get_node_distance(this.from, this.to) <= this.from.config.LOGLOSS_TRANSMIT_RANGE_M);
+        this.is_active = (get_node_distance(this.from, this.to) <= config.LOGLOSS_TRANSMIT_RANGE_M);
     }
 
     getRSSI() {
@@ -118,17 +118,17 @@ export class LogisticLossLink extends Link {
         if (d <= 0) {
             /* do not allow the distance to be zero */
             d = 0.01;
-        } else if (d >= this.from.config.LOGLOSS_TRANSMIT_RANGE_M) {
+        } else if (d >= config.LOGLOSS_TRANSMIT_RANGE_M) {
             /* no chance of reception */
-            return this.from.config.LOGLOSS_RX_SENSITIVITY_DBM;
+            return config.LOGLOSS_RX_SENSITIVITY_DBM;
         }
 
         /* Using the log-distance formula */
-        const path_loss_dbm = -this.from.config.LOGLOSS_RX_SENSITIVITY_DBM
-              + 10 * config.LOGLOSS_PATH_LOSS_EXPONENT * Math.log10(d / this.from.config.LOGLOSS_TRANSMIT_RANGE_M);
+        const path_loss_dbm = -config.LOGLOSS_RX_SENSITIVITY_DBM
+              + 10 * config.LOGLOSS_PATH_LOSS_EXPONENT * Math.log10(d / config.LOGLOSS_TRANSMIT_RANGE_M);
 
         mlog(log.DEBUG, `dist=${d} loss=${path_loss_dbm}`);
-        return this.from.config.TX_POWER_DBM - path_loss_dbm;
+        return config.TX_POWER_DBM - path_loss_dbm;
     }
 
     /*
@@ -138,12 +138,12 @@ export class LogisticLossLink extends Link {
     try_send(channel) {
         /* use the logistic function to model packet loss depending on RSSI */
         this.last_rssi = this.getRSSI();
-        if (this.last_rssi <= this.from.config.LOGLOSS_RX_SENSITIVITY_DBM) {
+        if (this.last_rssi <= config.LOGLOSS_RX_SENSITIVITY_DBM) {
             /* if not above the sensitivity limit, always count as failed */
             return false;
         }
         this.last_rssi += this.getAWGN(); /* add some noise */
-        const x = this.last_rssi - this.from.config.LOGLOSS_RSSI_INFLECTION_POINT_DBM;
+        const x = this.last_rssi - config.LOGLOSS_RSSI_INFLECTION_POINT_DBM;
         const success_rate = 1.0 / (1.0 + Math.exp(-x));
         const is_success = rng.random() < success_rate;
         mlog(log.DEBUG, `tx from=${this.from.id} to=${this.to.id} quality=${success_rate} ok=${is_success}`);
@@ -152,11 +152,11 @@ export class LogisticLossLink extends Link {
 
     get_average_success_rate() {
         const rssi = this.getRSSI();
-        if (rssi <= this.from.config.LOGLOSS_RX_SENSITIVITY_DBM) {
+        if (rssi <= config.LOGLOSS_RX_SENSITIVITY_DBM) {
             /* if not above the sensitivity limit, assume no chance of success */
             return 0.0;
         }
-        const x = rssi - this.from.config.LOGLOSS_RSSI_INFLECTION_POINT_DBM;
+        const x = rssi - config.LOGLOSS_RSSI_INFLECTION_POINT_DBM;
         return 1.0 / (1.0 + Math.exp(-x));
     }
 }
@@ -175,13 +175,13 @@ export class UnitDiskGraphLink extends Link {
     }
 
     update() {
-        this.is_active = (get_node_distance(this.from, this.to) <= this.from.config.UDGM_TRANSMIT_RANGE_M);
+        this.is_active = (get_node_distance(this.from, this.to) <= config.UDGM_TRANSMIT_RANGE_M);
     }
 
     getRSSI() {
         const d = get_node_distance(this.from, this.to);
-        const dist_ratio = d / this.from.config.UDGM_TRANSMIT_RANGE_M;
-        const rssi = this.from.config.TX_POWER_DBM + SS_STRONG + dist_ratio * (SS_WEAK - SS_STRONG);
+        const dist_ratio = d / config.UDGM_TRANSMIT_RANGE_M;
+        const rssi = config.TX_POWER_DBM + SS_STRONG + dist_ratio * (SS_WEAK - SS_STRONG);
         mlog(log.DEBUG, `dist=${d} rssi=${rssi}`);
         return rssi;
     }
@@ -192,18 +192,18 @@ export class UnitDiskGraphLink extends Link {
      */
     try_send(channel) {
         const d = get_node_distance(this.from, this.to);
-        const dist_ratio = d / this.from.config.UDGM_TRANSMIT_RANGE_M;
-        this.last_rssi = this.from.config.TX_POWER_DBM + SS_STRONG + dist_ratio * (SS_WEAK - SS_STRONG);
+        const dist_ratio = d / config.UDGM_TRANSMIT_RANGE_M;
+        this.last_rssi = config.TX_POWER_DBM + SS_STRONG + dist_ratio * (SS_WEAK - SS_STRONG);
         let is_success;
         let success_rate;
         if (dist_ratio <= 1) {
-            if (this.from.config.UDGM_CONSTANT_LOSS) {
-                success_rate = this.from.config.UDGM_RX_SUCCESS;
+            if (config.UDGM_CONSTANT_LOSS) {
+                success_rate = config.UDGM_RX_SUCCESS;
             } else {
                 const dist_squared = d * d;
-                const dist_max_squared = this.from.config.UDGM_TRANSMIT_RANGE_M * this.from.config.UDGM_TRANSMIT_RANGE_M;
+                const dist_max_squared = config.UDGM_TRANSMIT_RANGE_M * config.UDGM_TRANSMIT_RANGE_M;
                 const dist_squared_ratio = dist_squared / dist_max_squared;
-                success_rate = 1.0 - dist_squared_ratio * (1.0 - this.from.config.UDGM_RX_SUCCESS);
+                success_rate = 1.0 - dist_squared_ratio * (1.0 - config.UDGM_RX_SUCCESS);
             }
             is_success = rng.random() < success_rate;
         } else {
@@ -217,18 +217,18 @@ export class UnitDiskGraphLink extends Link {
 
     get_average_success_rate() {
         const d = get_node_distance(this.from, this.to);
-        const dist_ratio = d / this.from.config.UDGM_TRANSMIT_RANGE_M;
+        const dist_ratio = d / config.UDGM_TRANSMIT_RANGE_M;
         if (dist_ratio > 1) {
             return 0.0;
         }
-        if (this.from.config.UDGM_CONSTANT_LOSS) {
-            return this.from.config.UDGM_RX_SUCCESS;
+        if (config.UDGM_CONSTANT_LOSS) {
+            return config.UDGM_RX_SUCCESS;
         }
 
         const dist_squared = d * d;
-        const dist_max_squared = this.from.config.UDGM_TRANSMIT_RANGE_M * this.from.config.UDGM_TRANSMIT_RANGE_M;
+        const dist_max_squared = config.UDGM_TRANSMIT_RANGE_M * config.UDGM_TRANSMIT_RANGE_M;
         const dist_squared_ratio = dist_squared / dist_max_squared;
-        return 1.0 - dist_squared_ratio * (1.0 - this.from.config.UDGM_RX_SUCCESS);
+        return 1.0 - dist_squared_ratio * (1.0 - config.UDGM_RX_SUCCESS);
     }
 }
 
@@ -270,11 +270,11 @@ export class PisterHackLink extends Link {
 
     update() {
         const rssi = this.getRSSI();
-        this.is_active = (rssi > -97 + this.from.config.PHY_CO_CHANNEL_REJECTION_DB);
+        this.is_active = (rssi > -97 + config.PHY_CO_CHANNEL_REJECTION_DB);
     }
 
     get_variation() {
-        return rng.uniform(-this.from.config.PISTER_HACK_LOWER_SHIFT / 2, +this.from.config.PISTER_HACK_LOWER_SHIFT / 2);
+        return rng.uniform(-config.PISTER_HACK_LOWER_SHIFT / 2, +config.PISTER_HACK_LOWER_SHIFT / 2);
     }
 
     getRSSI() {
@@ -290,8 +290,8 @@ export class PisterHackLink extends Link {
         /* use simple Friis equation as in Pr = Pt + Gt + Gr + 20log10(fspl) */
         const antenna_gain_tx = 0.0;
         const antenna_gain_rx = 0.0;
-        return this.from.config.TX_POWER_DBM + antenna_gain_tx + antenna_gain_rx
-            + 20 * Math.log10(free_space_path_loss) - this.from.config.PISTER_HACK_LOWER_SHIFT / 2;
+        return config.TX_POWER_DBM + antenna_gain_tx + antenna_gain_rx
+            + 20 * Math.log10(free_space_path_loss) - config.PISTER_HACK_LOWER_SHIFT / 2;
     }
 
     /*

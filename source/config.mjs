@@ -298,19 +298,19 @@ const default_config = {
     /* project */
     /* -------------------------------------------------------------------- */
 
-    TX_POWER_DBM: 0, /* output power in dBm, for UDGM, LogLoss and PisterHack models */
-
-    LOGLOSS_TRANSMIT_RANGE_M: 200.0, /* in meters */
-
-    /* The maximal signal strength in dBm when the PRR is approximately 0% */
-    LOGLOSS_RX_SENSITIVITY_DBM: -100,
-
-    /* For the Unit Disk Graph Model */
-    UDGM_TRANSMIT_RANGE_M: 50.0, /* in meters */
-
-    UDGM_RX_SUCCESS: 1.0,
-
-    UDGM_CONSTANT_LOSS: false, /* dependent on distance? */
+    // TX_POWER_DBM: 0, /* output power in dBm, for UDGM, LogLoss and PisterHack models */
+    //
+    // LOGLOSS_TRANSMIT_RANGE_M: 200.0, /* in meters */
+    //
+    // /* The maximal signal strength in dBm when the PRR is approximately 0% */
+    // LOGLOSS_RX_SENSITIVITY_DBM: -100,
+    //
+    // /* For the Unit Disk Graph Model */
+    // UDGM_TRANSMIT_RANGE_M: 50.0, /* in meters */
+    //
+    // UDGM_RX_SUCCESS: 1.0,
+    //
+    // UDGM_CONSTANT_LOSS: false, /* dependent on distance? */
 
     ...config_struct
 };
