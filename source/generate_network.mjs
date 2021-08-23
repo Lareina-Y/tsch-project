@@ -338,8 +338,8 @@ function get_UDGM_degrees_links(nodes)
         }
     }
 
-    let num_disconnected = 0;
-    let num_large = 0;
+    let num_disconnected = 0; //lareina added for checking disconnected
+    let num_large = 0; //lareina added for checking if number of links too big
 
     for (let i = 0; i < nodes.length; ++i) {
         if (num_links_per_node[i] === 0) {
@@ -395,7 +395,7 @@ function generate_dalmeshphy(num_nodes) {
                     radius = changePositionIn(nodes, i, radius); //change the position of nodes   
 ///*                             
         } else if (net.num_large > 0) {
-            //change the links per node, make sure < 12 (Lareina added)
+            //change the links per node, make sure < 15 (Lareina added)
             for (let i = 0; i < nodes.length; ++i) {
                 if (net.num_links_per_node[i] > 15) {
                     radius = changePositionOut(nodes, i, radius); 
