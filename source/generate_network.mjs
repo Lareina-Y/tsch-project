@@ -96,7 +96,7 @@ function initialize_random(num_nodes, area_radius)
         const angle = rng.random() * Math.PI * 2;
         const pos_x = distance * Math.sin(angle);
         const pos_y = distance * Math.cos(angle);
-        log.log(log.INFO, null, "Main", `verify: area_radius=${area_radius} distance=${distance} pos_x=${pos_x} pos_y=${pos_y}`);
+        //log.log(log.INFO, null, "Main", `verify: area_radius=${area_radius} distance=${distance} pos_x=${pos_x} pos_y=${pos_y}`);
         nodes.push({pos_x, pos_y, distance, angle});
     }
     return nodes;
@@ -137,6 +137,7 @@ function increase_degree(nodes, area_radius)
     nodes[furthest_node].pos_x = distance * Math.sin(angle);
     nodes[furthest_node].pos_y = distance * Math.cos(angle);
     nodes[furthest_node].distance = distance;
+    //log.log(log.INFO, null, "Main", ` x:${nodes[furthest_node].pos_x} y:${nodes[furthest_node].pos_y}`);
     return area_radius;
 }
 
@@ -158,6 +159,35 @@ function decrease_degree(nodes, area_radius)
     nodes[nearest_node].pos_x = distance * Math.sin(angle);
     nodes[nearest_node].pos_y = distance * Math.cos(angle);
     nodes[nearest_node].distance = distance;
+    return area_radius;
+}
+
+//added lareina
+function changePositionIn(nodes, id, area_radius) //Lareina add 
+{
+    const angle = nodes[id].angle;
+    const distance = 0.9 * nodes[id].distance;
+    //log.log(log.INFO, null, "Main", ` old >> x:${nodes[id].pos_x} y:${nodes[id].pos_y}`);
+    nodes[id].pos_x = distance * Math.sin(angle);
+    nodes[id].pos_y = distance * Math.cos(angle);
+    nodes[id].distance = distance;
+    //log.log(log.INFO, null, "Main", ` x:${nodes[id].pos_x} y:${nodes[id].pos_y}`);
+    return area_radius;
+}
+
+function changePositionOut(nodes, id, area_radius) //Lareina add
+{
+    const angle = nodes[id].angle;
+    const distance = 1.1 * nodes[id].distance;
+    while (distance >= area_radius)
+    {
+        distance = area_radius - 1;
+    }
+    //log.log(log.INFO, null, "Main", ` old >> x:${nodes[id].pos_x} y:${nodes[id].pos_y}`);
+    nodes[id].pos_x = distance * Math.sin(angle);
+    nodes[id].pos_y = distance * Math.cos(angle);
+    nodes[id].distance = distance;
+    //log.log(log.INFO, null, "Main", ` x:${nodes[id].pos_x} y:${nodes[id].pos_y}`);
     return area_radius;
 }
 
@@ -282,7 +312,13 @@ function generate_dalgridphy(num_nodes)
 function get_UDGM_degrees_links(nodes)
 {
     const links = {};
+    const num_links_per_node = {};
     let num_good_links = 0;
+
+    for (let i = 0; i < nodes.length; ++i) {
+        num_links_per_node[i] = 0;
+    }
+
     for (let i = 0; i < nodes.length; ++i) {
         const n1 = nodes[i];
         for (let j = i + 1; j < nodes.length; ++j) {
@@ -294,18 +330,38 @@ function get_UDGM_degrees_links(nodes)
                 links[key] = alink;
                 num_good_links++;
             }
+
+            if (alink.is_active) {
+                num_links_per_node[i] += 1;
+                num_links_per_node[j] += 1;
+            }
         }
     }
+
+    let num_disconnected = 0;
+    let num_large = 0;
+
+    for (let i = 0; i < nodes.length; ++i) {
+        if (num_links_per_node[i] === 0) {
+            num_disconnected += 1;
+        }
+///*
+        if (num_links_per_node[i] > 15 || num_links_per_node[i] < 0) {
+            num_large += 1;
+        }
+//*/
+    }
+    
     const degrees = 2 * num_good_links / nodes.length;
-    log.log(log.INFO, null, "Main", `>> num_good_links ${num_good_links}`);
-    return { degrees, links };
+    log.log(log.INFO, null, "Main", `>> num_good_links ${num_good_links}; >> degree ${degrees} >> num_disconnected ${num_disconnected} >> num_large ${num_large}`);
+    return { degrees, links, num_disconnected, num_links_per_node, num_large };
 }
 
 function generate_dalmeshphy(num_nodes) {
     log.log(log.INFO, null, "Main", `>> random mesh topology ---------------`);
 
     let distance = config.DAL_NODE_DISTANCE;
-    let square_width = (Math.sqrt(config.NODE_TYPES[0].COUNT) - 1) * (distance);
+    //let square_width = (Math.sqrt(config.NODE_TYPES[0].COUNT) - 1) * (distance);
 
     //2. option 1
     // (The circle of which area is exactly the same as the area of the grid mesh square of the same number of nodes and the same number of distance.)
@@ -321,21 +377,42 @@ function generate_dalmeshphy(num_nodes) {
     //3. option 3
     // (The circle of which radius is x times of option 1 where the resulting number of links is similar to the corresponding case of the grid mesh square.)
     //let radius = Math.sqrt(Math.pow(square_width, 2) / Math.PI) * (1.35); //1.35 FOR OUTDOOR
-    let radius = Math.sqrt(Math.pow(square_width, 2) / Math.PI) * (1.475); //1.475 FOR HOME
+    //let radius = Math.sqrt(Math.pow(square_width, 2) / Math.PI) * (1.475); //1.475 FOR HOME
 
     //log.log(log.WARNING, null, "Main", `verify: distance ${distance} square_width ${square_width} radius ${radius}`);
 
+    let radius = config.NODE_TYPES[0].COUNT * distance;
+    log.log(log.WARNING, null, "Main", `verify: count ${config.NODE_TYPES[0].COUNT}; radius ${radius}`);
+
     const nodes = initialize_random(num_nodes, (radius));
-    const min_acceptable_degrees = 10;
+    const min_acceptable_degrees = 8;
 
     let net = get_UDGM_degrees_links(nodes);
-    while (net.degrees < min_acceptable_degrees) {
-        radius = increase_degree(nodes, radius);
-        log.log(log.INFO, null, "Main", `>> increase degree`);
+    while (net.degrees < min_acceptable_degrees || net.num_disconnected > 0 || net.num_large > 0) {
+        if (net.num_disconnected > 0) {
+            for (let i = 0; i < nodes.length; ++i) 
+                if (net.num_links_per_node[i] === 0) 
+                    radius = changePositionIn(nodes, i, radius); //change the position of nodes   
+///*                             
+        } else if (net.num_large > 0) {
+            //change the links per node, make sure < 12 (Lareina added)
+            for (let i = 0; i < nodes.length; ++i) {
+                if (net.num_links_per_node[i] > 15) {
+                    radius = changePositionOut(nodes, i, radius); 
+                } else if (net.num_links_per_node[i] < 0) {
+                    radius = changePositionIn(nodes, i, radius); 
+                }
+            }
+//*/        
+        } else {
+            radius = increase_degree(nodes, radius);
+            log.log(log.INFO, null, "Main", `>> increase degree`);
+        }     
+           
         net = get_UDGM_degrees_links(nodes);
     }
 
-    //log.log(log.INFO, null, "Main", `>> avg degrees ${net.degrees}`);
+    log.log(log.INFO, null, "Main", `>> avg degrees ${net.degrees}`);
 
     return nodes;
 }

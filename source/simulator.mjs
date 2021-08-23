@@ -534,7 +534,7 @@ export function construct_simulation(is_from_web)
 
                 const n = Math.sqrt(config.NODE_TYPES[0].COUNT);
                 const numParticipants = parseInt(net.nodes.size);
-                const lowerBound = 1, excludeId = 1, numSends = Math.ceil(numParticipants*0.4);
+                const lowerBound = 1, excludeId = null, numSends = Math.ceil(numParticipants*0.4);
                 let from_node_ids = get_n_random(numParticipants, lowerBound, excludeId, numSends);
 
                 log.log(log.INFO, null, "Main", `40% random pairs (sender/receiver) nodes will send/receive packets.`);

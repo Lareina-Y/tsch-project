@@ -351,6 +351,8 @@ export class Network {
                     "slot cycle rx scanning": cycle_scanning,
                     "slot cycle rx idle": cycle_idle,
                     "slot cycle rx total (rx + scan + idle)": (cycle_rx + cycle_scanning + cycle_idle),
+                    "slot cycle total": cycle_tx + cycle_rx,
+                    "slot cycle ratio": (cycle_tx + cycle_rx) / (config.SIMULATION_DURATION_SEC * 1000000),
                     "is rx total match with original?": (org_rx === (cycle_rx + cycle_scanning + cycle_idle)),
                     "energy_uc": charge_uc,
                     "energy_except_scanning_uc": charge_joined_uc,
@@ -362,6 +364,7 @@ export class Network {
 
         log.log(log.INFO, null, "Main", `packet stats: PDR=${pdr.toFixed(2)}% generated=${this.stats_app_num_tx} received=${this.stats_app_num_endpoint_rx} lost=${this.stats_app_num_lost} (tx_limit/queue/routing/scheduling/other=${this.stats_app_num_tx_limit_drops}/${this.stats_app_num_queue_drops}/${this.stats_app_num_routing_drops}/${this.stats_app_num_scheduling_drops}/${this.stats_app_num_other_drops})`);
         log.log(log.INFO, null, "Main", `link stats: Links#=${links_count} PAR=${ll_par.toFixed(2)}% tx=${this.stats_mac_parent_tx_unicast} acked=${this.stats_mac_parent_acked}`);
+        log.log(log.INFO, null, "Main", `latency=${this.stats_app_latencies.avg()} collision=${this.stats_mac_rx_collision} slot cycle=${cycle_tx + cycle_rx} slot cycle ratio=${(cycle_tx + cycle_rx) / (config.SIMULATION_DURATION_SEC * 1000000)}`);
 
         /* stats can come from multiple runs, they are merged at the end; use "0" as the run ID for now */
         stats = {"0" : stats};
